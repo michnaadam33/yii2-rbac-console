@@ -1,0 +1,45 @@
+{
+
+  "name": "michnaadam33/yii2-rbac-console",
+
+  "description": "This is common controller to Yii2 Rbac module",
+
+  "type": "yii2-extension",
+
+  "keywords": ["yii2","extension","rbac"," console"],
+
+  "license": "MIT",
+
+  "authors": [
+
+    {
+
+      "name": "Adam Michna",
+
+      "email": "admin@symetrland.com"
+
+    }
+
+  ],
+
+  "require": {
+
+    "yiisoft/yii2": "*"
+
+  },
+
+  "autoload": {
+
+    "psr-4": {
+
+      "michnaadam33\\rbacConsole\\": ""
+
+    }
+
+  },
+
+  "extra": {
+    "bootstrap": "michnaadam33\\rbacConsole\\RbacConsoleBootstrap"
+  }
+
+}
