@@ -44,23 +44,28 @@ class RbacController extends Controller
                 throw new \Exception("Set components settings!");
             }
 
-            $this->auth->removeAll();
-            $roles = $this->collection['role_hierarchy'];
-            foreach($roles as $roleName){
-                if(is_array($roleName)){
-                    $role = $this->auth->createRole($roleName[0]);
-                    $this->auth->add($role);
-                    foreach($roleName[1] as $childRoleName){
-                        $this->auth->addChild($role, $this->auth->getRole($childRoleName));
+            if ($this->confirm('Do you want to create new roles and delete the previous')) {
+
+
+                $this->auth->removeAll();
+                if (isset($this->collection['role_hierarchy'])) {
+                    $roles = $this->collection['role_hierarchy'];
+                    foreach ($roles as $roleName) {
+                        if (is_array($roleName)) {
+                            $role = $this->auth->createRole($roleName[0]);
+                            $this->auth->add($role);
+                            foreach ($roleName[1] as $childRoleName) {
+                                $this->auth->addChild($role, $this->auth->getRole($childRoleName));
+                            }
+                            $this->stdout("Added role: " . $roleName[0] . "\n", Console::FG_GREEN);
+                        } else {
+                            $role = $this->auth->createRole($roleName);
+                            $this->auth->add($role);
+                            $this->stdout("Added role: " . $roleName . "\n", Console::FG_GREEN);
+                        }
                     }
-                    $this->stdout("Added role: ". $roleName[0]."\n", Console::FG_GREEN);
-                }else {
-                    $role = $this->auth->createRole($roleName);
-                    $this->auth->add($role);
-                    $this->stdout("Added role: ". $roleName."\n", Console::FG_GREEN);
                 }
             }
-
         } catch (\Exception $e) {
             $this->stdout($e->getMessage() . "\n", Console::FG_RED);
             return Controller::EXIT_CODE_ERROR;
