@@ -14,17 +14,58 @@ use common\models\User;
  */
 class RbacController extends Controller
 {
-
+    public $init;
     private $auth;
+    private $collection;
 
     public function __construct($id, $module, $config = [])
     {
         parent::__construct($id, $module, $config);
 
+        if (isset(Yii::$app->components['rbac-console'])) {
+            $this->collection = Yii::$app->components['rbac-console'];
+        }
+
         $this->auth = Yii::$app->authManager;
     }
 
+
     public $by = 'user';
+
+
+    /**
+     * Init rbac from settings
+     * @return int
+     */
+    public function actionInit()
+    {
+        try {
+            if (!isset($this->collection)) {
+                throw new \Exception("Set components settings!");
+            }
+
+            $this->auth->removeAll();
+            $roles = $this->collection['role_hierarchy'];
+            foreach($roles as $roleName){
+                if(is_array($roleName)){
+                    $role = $this->auth->createRole($roleName[0]);
+                    $this->auth->add($role);
+                    foreach($roleName[1] as $childRoleName){
+                        $this->auth->addChild($role, $this->auth->getRole($childRoleName));
+                    }
+                    $this->stdout("Added role: ". $roleName[0]."\n", Console::FG_GREEN);
+                }else {
+                    $role = $this->auth->createRole($roleName);
+                    $this->auth->add($role);
+                    $this->stdout("Added role: ". $roleName."\n", Console::FG_GREEN);
+                }
+            }
+
+        } catch (\Exception $e) {
+            $this->stdout($e->getMessage() . "\n", Console::FG_RED);
+            return Controller::EXIT_CODE_ERROR;
+        }
+    }
 
     /**
      * Common reset password of user
@@ -410,6 +451,11 @@ class RbacController extends Controller
         }
     }
 
+    /**
+     * Remove role
+     * @param $name role name
+     * @return int
+     */
     public function actionRemoveRole($name)
     {
         try {
@@ -427,6 +473,11 @@ class RbacController extends Controller
         }
     }
 
+    /**
+     * Remove permission
+     * @param $name permission
+     * @return int
+     */
     public function actionRemovePermission($name)
     {
         try {
