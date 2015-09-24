@@ -20,7 +20,7 @@ class RbacConsoleBootstrap implements BootstrapInterface
     {
         return [
             'rbac' => [
-                'class' => 'michnaadam33\rbacConsole\RbacConsole'
+                'class' => 'michnaadam33\rbacConsole\RbacController'
             ]
         ];
     }
