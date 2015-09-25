@@ -47,6 +47,32 @@ to the require section of your `composer.json` file.
 ##Read about RBAC
 [http://www.yiiframework.com/doc-2.0/guide-security-authorization.html](http://www.yiiframework.com/doc-2.0/guide-security-authorization.html)
 
+##Create init action
+You can config a default role on yii2 config:
+```
+'components' => [
+        'rbac-console' => [
+            'class' => 'michnaadam33\rbacConsole\Collection',
+            'role_hierarchy' => [
+                'ROLE_GUEST',
+                'ROLE_CHILD',
+                'ROLE_USER',
+                ['ROLE_ADMIN',['ROLE_USER']],
+                ['ROLE_SUPER_ADMIN',['ROLE_ADMIN', 'ROLE_CHILD']]
+            ],
+        ],
+        ...
+]
+```
+
+When you run `yii rbac/init` will be five roles:
+
+* ROLE_GUEST
+* ROLE_CHILD
+* ROLE_USER
+* ROLE_ADMIN
+* ROLE_SUPER_ADMIN
+
 ##Posible action:
 
 Reset password.
