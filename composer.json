@@ -39,6 +39,9 @@
   },
 
   "extra": {
+    "branch-alias": {
+        "dev-master": "1.0.x-dev"
+    },
     "bootstrap": "michnaadam33\\rbacConsole\\RbacConsoleBootstrap"
   }
 
