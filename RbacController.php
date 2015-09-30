@@ -57,28 +57,6 @@ class RbacController extends Controller
                         $this->stdout("Added rule: " . $rule->name . "\n", Console::FG_GREEN);
                     }
                 }
-                if (isset($this->collection['role_hierarchy'])) {
-                    $roles = $this->collection['role_hierarchy'];
-                    foreach ($roles as $roleName) {
-                        if (is_array($roleName)) {
-                            $role = $this->auth->createRole($roleName[0]);
-                            $this->auth->add($role);
-                            foreach ($roleName[1] as $childRoleName) {
-                                $childRole = $this->auth->getRole($childRoleName);
-                                if($childRole == null){
-                                    throw new \Exception('Role '.$childRoleName. ' not exist');
-                                }
-                                $this->auth->addChild($role, $childRole);
-                            }
-                            $this->stdout("Added role: " . $roleName[0] . "\n", Console::FG_GREEN);
-                        } else {
-                            $role = $this->auth->createRole($roleName);
-                            $this->auth->add($role);
-                            $this->stdout("Added role: " . $roleName . "\n", Console::FG_GREEN);
-                        }
-                    }
-                }
-
                 if (isset($this->collection['permission_hierarchy'])) {
                     $permissions = $this->collection['permission_hierarchy'];
                     foreach ($permissions as $permissionName) {
@@ -91,8 +69,8 @@ class RbacController extends Controller
                             if (isset($permissionName['children'])) {
                                 foreach ($permissionName['children'] as $childPermissionName) {
                                     $childPermission = $this->auth->getPermission($childPermissionName);
-                                    if($childPermission == null){
-                                        throw new \Exception('Permission '.$childPermissionName. ' not exist');
+                                    if ($childPermission == null) {
+                                        throw new \Exception('Permission ' . $childPermissionName . ' not exist');
                                     }
                                     $this->auth->addChild($permission, $childPermission);
                                 }
@@ -102,6 +80,38 @@ class RbacController extends Controller
                             $permission = $this->auth->createPermission($permissionName);
                             $this->auth->add($permission);
                             $this->stdout("Added permission: " . $permissionName . "\n", Console::FG_GREEN);
+                        }
+                    }
+                }
+                if (isset($this->collection['role_hierarchy'])) {
+                    $roles = $this->collection['role_hierarchy'];
+                    foreach ($roles as $roleName) {
+                        if (is_array($roleName)) {
+                            $role = $this->auth->createRole($roleName['name']);
+                            $this->auth->add($role);
+                            if (isset($roleName['permissions'])) {
+                                foreach ($roleName['permissions'] as $permissionsName) {
+                                    $childPermission = $this->auth->getPermission($permissionsName);
+                                    if ($childPermission == null) {
+                                        throw new \Exception('Permission ' . $permissionsName . ' not exist');
+                                    }
+                                    $this->auth->addChild($role, $childPermission);
+                                }
+                            }
+                            if (isset($roleName['children'])) {
+                                foreach ($roleName['children'] as $childRoleName) {
+                                    $childRole = $this->auth->getRole($childRoleName);
+                                    if ($childRole == null) {
+                                        throw new \Exception('Role ' . $childRoleName . ' not exist');
+                                    }
+                                    $this->auth->addChild($role, $childRole);
+                                }
+                            }
+                            $this->stdout("Added role: " . $roleName['name'] . "\n", Console::FG_GREEN);
+                        } else {
+                            $role = $this->auth->createRole($roleName);
+                            $this->auth->add($role);
+                            $this->stdout("Added role: " . $roleName . "\n", Console::FG_GREEN);
                         }
                     }
                 }
