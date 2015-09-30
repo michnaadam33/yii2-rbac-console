@@ -65,6 +65,24 @@ class RbacController extends Controller
                         }
                     }
                 }
+
+                if (isset($this->collection['permission_hierarchy'])) {
+                    $permissions = $this->collection['permission_hierarchy'];
+                    foreach ($permissions as $permissionName) {
+                        if (is_array($permissionName)) {
+                            $permission = $this->auth->createPermission($permissionName[0]);
+                            $this->auth->add($permission);
+                            foreach ($permissionName[1] as $childPermissionName) {
+                                $this->auth->addChild($permission, $this->auth->getPermission($childPermissionName));
+                            }
+                            $this->stdout("Added permission: " . $permissionName[0] . "\n", Console::FG_GREEN);
+                        } else {
+                            $permission = $this->auth->createPermission($permissionName);
+                            $this->auth->add($permission);
+                            $this->stdout("Added permission: " . $permissionName . "\n", Console::FG_GREEN);
+                        }
+                    }
+                }
             }
         } catch (\Exception $e) {
             $this->stdout($e->getMessage() . "\n", Console::FG_RED);
@@ -500,7 +518,8 @@ class RbacController extends Controller
 
     public function options($actionID)
     {
-        $ret = ($actionID == 'show-permission' || $actionID == 'remove-child-permission') ? ['by'] : [];
+    	$actions = ['show-permission', 'remove-child-permission', 'add-child-permission'];
+        $ret = (in_array($actionID, $actions)) ? ['by'] : [];
 
         return array_merge(parent::options($actionID), $ret);
     }

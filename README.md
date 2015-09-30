@@ -61,6 +61,13 @@ You can config a default role on yii2 config:
                 ['ROLE_SUPER_ADMIN',['ROLE_ADMIN', 'ROLE_CHILD']]
             ],
         ],
+        'permission_hierarchy' => [
+                'deleteOwnPost',
+                ['deletePost',['deleteOwnPost']],
+                'createPost',
+                'editOwnProfile',
+                ['editProfile',['editOwnProfile']],
+        ]
         ...
 ]
 ```
