@@ -48,6 +48,15 @@ class RbacController extends Controller
 
 
                 $this->auth->removeAll();
+
+                if (isset($this->collection['rule_hierarchy'])) {
+                    $rules = $this->collection['rule_hierarchy'];
+                    foreach ($rules as $ruleClass) {
+                        $rule = new $ruleClass;
+                        $this->auth->add($rule);
+                        $this->stdout("Added rule: " . $rule->name . "\n", Console::FG_GREEN);
+                    }
+                }
                 if (isset($this->collection['role_hierarchy'])) {
                     $roles = $this->collection['role_hierarchy'];
                     foreach ($roles as $roleName) {
@@ -55,7 +64,11 @@ class RbacController extends Controller
                             $role = $this->auth->createRole($roleName[0]);
                             $this->auth->add($role);
                             foreach ($roleName[1] as $childRoleName) {
-                                $this->auth->addChild($role, $this->auth->getRole($childRoleName));
+                                $childRole = $this->auth->getRole($childRoleName);
+                                if($childRole == null){
+                                    throw new \Exception('Role '.$childRoleName. ' not exist');
+                                }
+                                $this->auth->addChild($role, $childRole);
                             }
                             $this->stdout("Added role: " . $roleName[0] . "\n", Console::FG_GREEN);
                         } else {
@@ -70,12 +83,21 @@ class RbacController extends Controller
                     $permissions = $this->collection['permission_hierarchy'];
                     foreach ($permissions as $permissionName) {
                         if (is_array($permissionName)) {
-                            $permission = $this->auth->createPermission($permissionName[0]);
-                            $this->auth->add($permission);
-                            foreach ($permissionName[1] as $childPermissionName) {
-                                $this->auth->addChild($permission, $this->auth->getPermission($childPermissionName));
+                            $permission = $this->auth->createPermission($permissionName['name']);
+                            if (isset($permissionName['rule'])) {
+                                $permission->ruleName = $permissionName['rule'];
                             }
-                            $this->stdout("Added permission: " . $permissionName[0] . "\n", Console::FG_GREEN);
+                            $this->auth->add($permission);
+                            if (isset($permissionName['children'])) {
+                                foreach ($permissionName['children'] as $childPermissionName) {
+                                    $childPermission = $this->auth->getPermission($childPermissionName);
+                                    if($childPermission == null){
+                                        throw new \Exception('Permission '.$childPermissionName. ' not exist');
+                                    }
+                                    $this->auth->addChild($permission, $childPermission);
+                                }
+                            }
+                            $this->stdout("Added permission: " . $permissionName['name'] . "\n", Console::FG_GREEN);
                         } else {
                             $permission = $this->auth->createPermission($permissionName);
                             $this->auth->add($permission);
@@ -96,7 +118,8 @@ class RbacController extends Controller
      * @param $password
      * @return int
      */
-    public function actionResetPassword($username, $password)
+    public
+    function actionResetPassword($username, $password)
     {
         $user = User::findByUsername($username);
         try {
@@ -119,7 +142,8 @@ class RbacController extends Controller
      * @param $username
      * @return int
      */
-    public function actionAssign($roleName, $username)
+    public
+    function actionAssign($roleName, $username)
     {
         $role = $this->auth->getRole($roleName);
         $user = User::findByUsername($username);
@@ -148,7 +172,8 @@ class RbacController extends Controller
      * @param $username
      * @return int
      */
-    public function actionRevoke($roleName, $username)
+    public
+    function actionRevoke($roleName, $username)
     {
         $role = $this->auth->getRole($roleName);
         $user = User::findByUsername($username);
@@ -175,7 +200,8 @@ class RbacController extends Controller
      * Show all roles
      * @return int
      */
-    public function actionShowAllRoles()
+    public
+    function actionShowAllRoles()
     {
         try {
             $roles = $this->auth->getRoles();
@@ -196,7 +222,8 @@ class RbacController extends Controller
      * Show all permissions
      * @return int
      */
-    public function actionShowAllPermissions()
+    public
+    function actionShowAllPermissions()
     {
         try {
             $permissions = $this->auth->getPermissions();
@@ -218,7 +245,8 @@ class RbacController extends Controller
      * @param $username
      * @return int
      */
-    public function actionShowRole($username)
+    public
+    function actionShowRole($username)
     {
         $user = User::findByUsername($username);
         try {
@@ -245,7 +273,8 @@ class RbacController extends Controller
      * @param $name
      * @return int
      */
-    public function actionShowPermission($name)
+    public
+    function actionShowPermission($name)
     {
         try {
             if ($this->by == "user") {
@@ -298,7 +327,8 @@ class RbacController extends Controller
      * @param $childName
      * @return int
      */
-    public function actionRemoveChildPermission($parentName, $childName)
+    public
+    function actionRemoveChildPermission($parentName, $childName)
     {
         try {
             if ($this->by == "user") {
@@ -337,7 +367,8 @@ class RbacController extends Controller
      * @param $childName
      * @return int
      */
-    public function actionRemoveChildRole($parentName, $childName)
+    public
+    function actionRemoveChildRole($parentName, $childName)
     {
         try {
 
@@ -368,7 +399,8 @@ class RbacController extends Controller
      * @param $childName
      * @return mixed
      */
-    public function actionAddChildRole($parentName, $childName)
+    public
+    function actionAddChildRole($parentName, $childName)
     {
         try {
 
@@ -399,7 +431,8 @@ class RbacController extends Controller
      * @param $childName
      * @return mixed
      */
-    public function actionAddChildPermission($parentName, $childName)
+    public
+    function actionAddChildPermission($parentName, $childName)
     {
         try {
             if ($this->by == "user") {
@@ -438,7 +471,8 @@ class RbacController extends Controller
      * @param string $description
      * @return int
      */
-    public function actionCreateRole($name, $description = "")
+    public
+    function actionCreateRole($name, $description = "")
     {
         try {
             $role = $this->auth->createRole($name);
@@ -459,7 +493,8 @@ class RbacController extends Controller
      * @param string $description
      * @return int
      */
-    public function actionCreatePermission($name, $description = "")
+    public
+    function actionCreatePermission($name, $description = "")
     {
         try {
             $permission = $this->auth->createPermission($name);
@@ -479,7 +514,8 @@ class RbacController extends Controller
      * @param $name role name
      * @return int
      */
-    public function actionRemoveRole($name)
+    public
+    function actionRemoveRole($name)
     {
         try {
             $role = $this->auth->getRole($name);
@@ -501,7 +537,8 @@ class RbacController extends Controller
      * @param $name permission
      * @return int
      */
-    public function actionRemovePermission($name)
+    public
+    function actionRemovePermission($name)
     {
         try {
             $permission = $this->auth->getPermission($name);
@@ -516,9 +553,10 @@ class RbacController extends Controller
         }
     }
 
-    public function options($actionID)
+    public
+    function options($actionID)
     {
-    	$actions = ['show-permission', 'remove-child-permission', 'add-child-permission'];
+        $actions = ['show-permission', 'remove-child-permission', 'add-child-permission'];
         $ret = (in_array($actionID, $actions)) ? ['by'] : [];
 
         return array_merge(parent::options($actionID), $ret);

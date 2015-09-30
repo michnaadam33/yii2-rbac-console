@@ -61,13 +61,18 @@ You can config a default role on yii2 config:
                 ['ROLE_SUPER_ADMIN',['ROLE_ADMIN', 'ROLE_CHILD']]
             ],
         ],
-        'permission_hierarchy' => [
-                'deleteOwnPost',
-                ['deletePost',['deleteOwnPost']],
-                'createPost',
-                'editOwnProfile',
-                ['editProfile',['editOwnProfile']],
-        ]
+        'rule_hierarchy' => [
+            'common\rbac\AuthorPostRule'
+        ],
+       'permission_hierarchy' => [
+            'createPost',
+            'deletePost',
+            [
+                'name' =>'deleteOwnPost',
+                'rule' => 'RULE_AUTHOR_POST',
+                'children' => ['deletePost']
+            ],
+       ]
         ...
 ]
 ```
