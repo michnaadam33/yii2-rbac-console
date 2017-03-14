@@ -1,11 +1,11 @@
-#Rbac console
+# Rbac console
 
 ============
 
-##This is common controller to Yii2 Rbac module
+## This is common controller to Yii2 Rbac module
 
 
-##Installation
+## Installation
 
 
 
@@ -44,10 +44,10 @@ to the require section of your `composer.json` file.
 
 
 
-##Read about RBAC
+## Read about RBAC
 [http://www.yiiframework.com/doc-2.0/guide-security-authorization.html](http://www.yiiframework.com/doc-2.0/guide-security-authorization.html)
 
-##Create init action
+## Create init action
 You can config a default role on yii2 config:
 ```
 'components' => [
@@ -91,7 +91,7 @@ When you run `yii rbac/init` will be five roles:
 * ROLE_ADMIN
 * ROLE_SUPER_ADMIN
 
-##Posible action:
+## Posible action:
 
 Reset password.
 
