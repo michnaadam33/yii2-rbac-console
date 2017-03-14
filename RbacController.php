@@ -1,12 +1,10 @@
 <?php
-/** * Created by adam on 24.09.15 */
 
 namespace michnaadam33\rbacConsole;
 
 use Yii;
 use yii\console\Controller;
 use yii\helpers\Console;
-use common\models\User;
 
 /**
  * Class RbacController
@@ -15,23 +13,29 @@ use common\models\User;
 class RbacController extends Controller
 {
     public $init;
+
     private $auth;
+
+
     private $collection;
+
+    /**
+     * @var string
+     */
+    private $userClass;
 
     public function __construct($id, $module, $config = [])
     {
         parent::__construct($id, $module, $config);
 
+        $this->auth = Yii::$app->authManager;
+
         if (isset(Yii::$app->components['rbac-console'])) {
             $this->collection = Yii::$app->components['rbac-console'];
         }
+        $this->userClass = Yii::$app->user->identityClass;
 
-        $this->auth = Yii::$app->authManager;
     }
-
-
-    public $by = 'user';
-
 
     /**
      * Init rbac from settings
@@ -43,12 +47,8 @@ class RbacController extends Controller
             if (!isset($this->collection)) {
                 throw new \Exception("Set components settings!");
             }
-
             if ($this->confirm('Do you want to create new roles and delete the previous')) {
-
-
                 $this->auth->removeAll();
-
                 if (isset($this->collection['rule_hierarchy'])) {
                     $rules = $this->collection['rule_hierarchy'];
                     foreach ($rules as $ruleClass) {
@@ -122,16 +122,19 @@ class RbacController extends Controller
         }
     }
 
+
+
+    public $by = 'user';
+
     /**
      * Common reset password of user
      * @param $username
      * @param $password
      * @return int
      */
-    public
-    function actionResetPassword($username, $password)
+    public function actionResetPassword($username, $password)
     {
-        $user = User::findByUsername($username);
+        $user = $this->findUserByUsername($username);
         try {
             if (!isset($user)) {
                 throw new \Exception("This user not exists!");
@@ -152,11 +155,10 @@ class RbacController extends Controller
      * @param $username
      * @return int
      */
-    public
-    function actionAssign($roleName, $username)
+    public function actionAssign($roleName, $username)
     {
         $role = $this->auth->getRole($roleName);
-        $user = User::findByUsername($username);
+        $user = $this->findUserByUsername($username);
         try {
             if (!isset($role)) {
                 throw new \Exception("This role not exists!");
@@ -182,11 +184,10 @@ class RbacController extends Controller
      * @param $username
      * @return int
      */
-    public
-    function actionRevoke($roleName, $username)
+    public function actionRevoke($roleName, $username)
     {
         $role = $this->auth->getRole($roleName);
-        $user = User::findByUsername($username);
+        $user = $this->findUserByUsername($username);
         try {
             if (!isset($role)) {
                 throw new \Exception("This role not exists!");
@@ -210,8 +211,7 @@ class RbacController extends Controller
      * Show all roles
      * @return int
      */
-    public
-    function actionShowAllRoles()
+    public function actionShowAllRoles()
     {
         try {
             $roles = $this->auth->getRoles();
@@ -232,8 +232,7 @@ class RbacController extends Controller
      * Show all permissions
      * @return int
      */
-    public
-    function actionShowAllPermissions()
+    public function actionShowAllPermissions()
     {
         try {
             $permissions = $this->auth->getPermissions();
@@ -255,10 +254,9 @@ class RbacController extends Controller
      * @param $username
      * @return int
      */
-    public
-    function actionShowRole($username)
+    public function actionShowRole($username)
     {
-        $user = User::findByUsername($username);
+        $user = $this->findUserByUsername($username);
         try {
             if (!isset($user)) {
                 throw new \Exception("This user not exists!");
@@ -283,12 +281,11 @@ class RbacController extends Controller
      * @param $name
      * @return int
      */
-    public
-    function actionShowPermission($name)
+    public function actionShowPermission($name)
     {
         try {
             if ($this->by == "user") {
-                $user = User::findByUsername($name);
+                $user = $this->findUserByUsername($name);
                 if (!isset($user)) {
                     throw new \Exception("This user not exists!");
                 }
@@ -337,12 +334,11 @@ class RbacController extends Controller
      * @param $childName
      * @return int
      */
-    public
-    function actionRemoveChildPermission($parentName, $childName)
+    public function actionRemoveChildPermission($parentName, $childName)
     {
         try {
             if ($this->by == "user") {
-                $parent = User::findByUsername($parentName);
+                $parent = $this->findUserByUsername($parentName);
                 if (!isset($parent)) {
                     throw new \Exception($parentName . " user not exists!");
                 }
@@ -377,8 +373,7 @@ class RbacController extends Controller
      * @param $childName
      * @return int
      */
-    public
-    function actionRemoveChildRole($parentName, $childName)
+    public function actionRemoveChildRole($parentName, $childName)
     {
         try {
 
@@ -409,8 +404,7 @@ class RbacController extends Controller
      * @param $childName
      * @return mixed
      */
-    public
-    function actionAddChildRole($parentName, $childName)
+    public function actionAddChildRole($parentName, $childName)
     {
         try {
 
@@ -436,17 +430,16 @@ class RbacController extends Controller
     }
 
     /**
-     * Add child premission to user or role
+     * Add child permission to user or role
      * @param $parentName
      * @param $childName
      * @return mixed
      */
-    public
-    function actionAddChildPermission($parentName, $childName)
+    public function actionAddChildPermission($parentName, $childName)
     {
         try {
             if ($this->by == "user") {
-                $parent = User::findByUsername($parentName);
+                $parent = $this->findUserByUsername($parentName);
                 if (!isset($parent)) {
                     throw new \Exception($parentName . " user not exists!");
                 }
@@ -481,8 +474,7 @@ class RbacController extends Controller
      * @param string $description
      * @return int
      */
-    public
-    function actionCreateRole($name, $description = "")
+    public function actionCreateRole($name, $description = "")
     {
         try {
             $role = $this->auth->createRole($name);
@@ -503,8 +495,7 @@ class RbacController extends Controller
      * @param string $description
      * @return int
      */
-    public
-    function actionCreatePermission($name, $description = "")
+    public function actionCreatePermission($name, $description = "")
     {
         try {
             $permission = $this->auth->createPermission($name);
@@ -519,13 +510,7 @@ class RbacController extends Controller
         }
     }
 
-    /**
-     * Remove role
-     * @param $name role name
-     * @return int
-     */
-    public
-    function actionRemoveRole($name)
+    public function actionRemoveRole($name)
     {
         try {
             $role = $this->auth->getRole($name);
@@ -542,13 +527,7 @@ class RbacController extends Controller
         }
     }
 
-    /**
-     * Remove permission
-     * @param $name permission
-     * @return int
-     */
-    public
-    function actionRemovePermission($name)
+    public function actionRemovePermission($name)
     {
         try {
             $permission = $this->auth->getPermission($name);
@@ -563,13 +542,16 @@ class RbacController extends Controller
         }
     }
 
-    public
-    function options($actionID)
+    public function options($actionID)
     {
         $actions = ['show-permission', 'remove-child-permission', 'add-child-permission'];
         $ret = (in_array($actionID, $actions)) ? ['by'] : [];
 
         return array_merge(parent::options($actionID), $ret);
+    }
+
+    private function findUserByUsername($username){
+        return call_user_func(array($this->userClass, '::findByUsername'), $username);
     }
 
 }

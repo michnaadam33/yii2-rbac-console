@@ -65,7 +65,7 @@ You can config a default role on yii2 config:
                     'children' => ['deletePost']
                 ],
            ],
-           role_hierarchy' => [
+           'role_hierarchy' => [
                 'ROLE_GUEST',
                 'ROLE_CHILD',
                 'ROLE_USER',
